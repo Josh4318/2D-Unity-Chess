@@ -150,6 +150,17 @@ public class GameManager : MonoBehaviour
         Vector3 position = targetTile.transform.position;
         position.z = chessPiece.transform.position.z; // Ensure the z position is maintained
         chessPiece.transform.position = position;
+
+        RaycastHit2D hit =  Physics2D.Raycast(position, Vector2.zero);
+        if (hit.collider != null && hit.collider.gameObject.CompareTag("ChessPiece"))
+        {
+            GameObject hitPiece = hit.collider.gameObject;
+            if (hitPiece.GetComponent<Piece>().IsWhite() != chessPiece.GetComponent<Piece>().IsWhite()) 
+            {
+                Destroy(hitPiece);
+            }
+        }
+        
         Debug.Log("Moved piece to: " + position);
         DeselectCurrentPiece();
     }

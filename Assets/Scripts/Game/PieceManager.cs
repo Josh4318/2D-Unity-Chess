@@ -76,24 +76,25 @@ public class PieceManager : MonoBehaviour
     {
         ClearMovePlates();
         Vector2 piecePosition = chessPiece.transform.position;
-        string pieceName = chessPiece.name;
+        string pieceName = chessPiece.GetComponent<Piece>().GetName();
 
+        Debug.Log(pieceName);
         switch (GetPieceType(pieceName))
         {
             case "Pawn":
                 PawnMoves(chessPiece, piecePosition, chessPiece.GetComponent<Piece>().IsWhite());
                 return;
             case "Rook":
-                RookMoves(piecePosition);
+                RookMoves(piecePosition, chessPiece);
                 return;
             case "Knight":
                 KnightMoves(piecePosition);
                 return;
             case "Bishop":
-                BishopMoves(piecePosition);
+                BishopMoves(piecePosition, chessPiece);
                 return;
             case "Queen":
-                QueenMoves(piecePosition);
+                QueenMoves(piecePosition, chessPiece);
                 return;
             case "King":
                 KingMoves(piecePosition);
@@ -151,7 +152,7 @@ public class PieceManager : MonoBehaviour
         
         //if pawn is white add tile up 1, if black add 1 down
         ActivateMovePlate((int)piecePosition.x, (int)piecePosition.y + direction);
-
+        Debug.Log($"starting rank = {startRank}");
         //if on starting position allow double move
         if((int)piecePosition.y == startRank) 
         {
@@ -163,24 +164,74 @@ public class PieceManager : MonoBehaviour
         ActivateCaptureMovePlate((int)piecePosition.x - 1, (int)piecePosition.y + direction, chessPiece);
     }
 
-    void RookMoves(Vector2 piecePosition) {
-
+    void RookMoves(Vector2 piecePosition, GameObject chessPiece)
+    {
+        for (int i = 1; i < 8; i++)
+        {
+            if (!ActivateMovePlateOrBreak((int)piecePosition.x + i, (int)piecePosition.y, chessPiece)) break;
+        }
+        for (int i = 1; i < 8; i++)
+        {
+            if (!ActivateMovePlateOrBreak((int)piecePosition.x - i, (int)piecePosition.y, chessPiece)) break;
+        }
+        for (int i = 1; i < 8; i++)
+        {
+            if (!ActivateMovePlateOrBreak((int)piecePosition.x, (int)piecePosition.y + i, chessPiece)) break;
+        }
+        for (int i = 1; i < 8; i++)
+        {
+            if (!ActivateMovePlateOrBreak((int)piecePosition.x, (int)piecePosition.y - i, chessPiece)) break;
+        }
     }
 
-    void KnightMoves(Vector2 piecePosition) {
-
+    void KnightMoves(Vector2 piecePosition) 
+    {
+        ActivateMovePlate((int)piecePosition.x + 1, (int)piecePosition.y + 2);
+        ActivateMovePlate((int)piecePosition.x + 1, (int)piecePosition.y - 2);
+        ActivateMovePlate((int)piecePosition.x - 1, (int)piecePosition.y + 2);
+        ActivateMovePlate((int)piecePosition.x - 1, (int)piecePosition.y - 2);
+        ActivateMovePlate((int)piecePosition.x + 2, (int)piecePosition.y + 1);
+        ActivateMovePlate((int)piecePosition.x + 2, (int)piecePosition.y - 1);
+        ActivateMovePlate((int)piecePosition.x - 2, (int)piecePosition.y + 1);
+        ActivateMovePlate((int)piecePosition.x - 2, (int)piecePosition.y - 1);
     }
 
-    void BishopMoves(Vector2 piecePosition) {
-
+    void BishopMoves(Vector2 piecePosition, GameObject chessPiece) 
+    {
+        for (int i = 1; i < 8; i++)
+        {
+            if (!ActivateMovePlateOrBreak((int)piecePosition.x + i, (int)piecePosition.y + i, chessPiece)) break;
+        }
+        for (int i = 1; i < 8; i++)
+        {
+            if (!ActivateMovePlateOrBreak((int)piecePosition.x + i, (int)piecePosition.y - i, chessPiece)) break;
+        }
+        for (int i = 1; i < 8; i++)
+        {
+            if (!ActivateMovePlateOrBreak((int)piecePosition.x - i, (int)piecePosition.y + i, chessPiece)) break;
+        }
+        for (int i = 1; i < 8; i++)
+        {
+            if (!ActivateMovePlateOrBreak((int)piecePosition.x - i, (int)piecePosition.y - i, chessPiece)) break;
+        }
     }
 
-    void QueenMoves(Vector2 piecePosition) {
-
+    void QueenMoves(Vector2 piecePosition, GameObject chessPiece) 
+    {
+        RookMoves(piecePosition, chessPiece);
+        BishopMoves(piecePosition, chessPiece);
     }
 
-    void KingMoves(Vector2 piecePosition) {
-
+    void KingMoves(Vector2 piecePosition) 
+    {
+        ActivateMovePlate((int)piecePosition.x + 1, (int)piecePosition.y);
+        ActivateMovePlate((int)piecePosition.x - 1, (int)piecePosition.y);
+        ActivateMovePlate((int)piecePosition.x, (int)piecePosition.y + 1);
+        ActivateMovePlate((int)piecePosition.x, (int)piecePosition.y - 1);
+        ActivateMovePlate((int)piecePosition.x + 1, (int)piecePosition.y + 1);
+        ActivateMovePlate((int)piecePosition.x - 1, (int)piecePosition.y + 1);
+        ActivateMovePlate((int)piecePosition.x + 1, (int)piecePosition.y - 1);
+        ActivateMovePlate((int)piecePosition.x - 1, (int)piecePosition.y - 1);
     }
 
     /*if a piece is found move plates will stop being generated*/
@@ -189,23 +240,33 @@ public class PieceManager : MonoBehaviour
         Tile tile = boardManager.getTilePosition(new Vector2(x, y));
         if (tile != null)
         {
-            RaycastHit2D hit = Physics2D.Raycast(tile.transform.position, Vector2.zero);
+            Debug.Log("Checking tile at: " + x + ", " + y);
+            int layerMask = LayerMask.GetMask("Pieces");
+            RaycastHit2D hit = Physics2D.Raycast(tile.transform.position, Vector2.zero, Mathf.Infinity, layerMask);
+            Debug.Log(hit);
             if (hit.collider == null)
             {
                 tile.ShowMovePlate();
                 moveTiles.Add(tile);
+                Debug.Log("Move plate activated at: " + x + ", " + y);
                 return true;
             }
             else if (hit.collider.gameObject.CompareTag("ChessPiece"))
             {
                 GameObject hitPiece = hit.collider.gameObject;
+                Debug.Log("Piece detected at: " + x + ", " + y + " - " + hitPiece.name);
                 if (hitPiece.GetComponent<Piece>().IsWhite() != chessPiece.GetComponent<Piece>().IsWhite())
                 {
                     tile.ShowMovePlate();
                     moveTiles.Add(tile);
+                    Debug.Log("Capture move plate activated at: " + x + ", " + y);
                 }
                 return false;
             }
+        }
+        else
+        {
+            Debug.Log("No tile found at: " + x + ", " + y);
         }
         return false;
     }
