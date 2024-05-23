@@ -9,7 +9,6 @@ public class GameManager : MonoBehaviour
     public GameObject chessPiece;
     public BoardManager boardManager;
     public PieceManager pieceManager;
-    private List<Tile> moveTiles = new List<Tile>();
 
     private bool isDragging = false;
     private Vector3 initialPosition;
@@ -107,7 +106,7 @@ public class GameManager : MonoBehaviour
         }
         chessPiece = piece;
         initialPosition = piece.transform.position;
-        ShowMovePlates();
+        pieceManager.ShowMovePlates(chessPiece);
         Debug.Log("piece size: " + chessPiece.GetComponent<SpriteRenderer>().size);
         piece.GetComponent<SpriteRenderer>().size = new Vector2(1f, 1f);
     }
@@ -116,37 +115,8 @@ public class GameManager : MonoBehaviour
     {
         if (chessPiece != null)
         {
-            ClearMovePlates();
+            pieceManager.ClearMovePlates();
             chessPiece = null;
-        }
-    }
-
-    void ShowMovePlates()
-    {
-        Vector2 piecePosition = chessPiece.transform.position;
-        ActivateMovePlate((int)piecePosition.x, (int)piecePosition.y + 1);
-        ActivateMovePlate((int)piecePosition.x, (int)piecePosition.y - 1);
-        ActivateMovePlate((int)piecePosition.x + 1, (int)piecePosition.y);
-        ActivateMovePlate((int)piecePosition.x - 1, (int)piecePosition.y);
-    }
-
-    void ClearMovePlates()
-    {
-        foreach (Tile tile in moveTiles)
-        {
-            tile.HideMovePlate();
-        }
-        moveTiles.Clear();
-    }
-
-    void ActivateMovePlate(int x, int y)
-    {
-        Tile tile = boardManager.getTilePosition(new Vector2(x, y));
-        if (tile != null)
-        {
-            Debug.Log("Activating Move Plate on Tile: " + tile.name);
-            tile.ShowMovePlate();
-            moveTiles.Add(tile);
         }
     }
 
