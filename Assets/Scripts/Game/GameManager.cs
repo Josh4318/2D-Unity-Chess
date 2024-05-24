@@ -154,6 +154,7 @@ public class GameManager : MonoBehaviour
         if (hit.collider != null && hit.collider.gameObject.CompareTag("ChessPiece"))
         {
             GameObject hitPiece = hit.collider.gameObject;
+            Debug.Log("Capturing Piece: " + hitPiece.name);
             if (hitPiece.GetComponent<Piece>().IsWhite() != chessPiece.GetComponent<Piece>().IsWhite()) 
             {
                 Destroy(hitPiece);

@@ -57,7 +57,7 @@ public class BoardManager : MonoBehaviour
 
     public Vector3 GetTileCenter(int x, int y)
     {
-        return new Vector3(x, y, (float)-0.2);
+        return new Vector3(x, y, (float)-0.1);
     }
 
 
