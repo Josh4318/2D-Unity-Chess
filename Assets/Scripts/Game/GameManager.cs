@@ -1,3 +1,7 @@
+/***********************************************************************
+ *
+***********************************************************************/
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -10,8 +14,10 @@ public class GameManager : MonoBehaviour
     public BoardManager boardManager;
     public PieceManager pieceManager;
 
-    private bool isDragging = false;
     private Vector3 initialPosition;
+    private bool isWhiteTurn = true;
+    private List<GameObject> activeMovePlates = new List<GameObject>();
+
 
     // Start is called before the first frame update
     void Start()
@@ -26,61 +32,64 @@ public class GameManager : MonoBehaviour
     void Update()
     {
         Inputs();
-        if (isDragging)
-        {
-            DragPiece();
-        }
     }
 
     void Inputs()
     {
         if (Input.GetMouseButtonDown(1))
-        {  // Right-click
+        {  
             RightClick();
         }
         if (Input.GetMouseButtonDown(0))
-        {  // Left-click
+        {  
             LeftClick();
-        }
-        if (Input.GetMouseButtonUp(0) && isDragging)
-        {
-            DropPiece();
         }
     }
     void LeftClick()
     {
         Debug.Log("Left Click Detected");
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mousePosition.z = 0;
         Debug.Log($"Mouse Position: {mousePosition}");
 
-        RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
-        if (hit.collider != null)
+        int movePlateLayerMask = LayerMask.GetMask("MovePlates");
+        RaycastHit2D hitMovePlate = Physics2D.Raycast(mousePosition, Vector2.zero, Mathf.Infinity, movePlateLayerMask);
+
+        if (hitMovePlate.collider != null)
         {
-            GameObject selectedObject = hit.collider.gameObject;
-            Debug.Log("Object Hit: " + selectedObject.name);
-            if (selectedObject.CompareTag("ChessPiece"))
-            {
-                Debug.Log("ChessPiece Selected: " + selectedObject.name);
-                SelectPiece(selectedObject);
-            }
-            else if (selectedObject.CompareTag("MovePlate"))
-            {
-                MovePiece(selectedObject.transform.parent.gameObject);
-            }
-            else
-            {
-                Debug.Log("Hit Non-Piece Object: " + selectedObject.name);
-            }
+            GameObject selectedObject = hitMovePlate.collider.gameObject;
+            Debug.Log("MovePLate Hit: " + selectedObject.name);
+            MovePiece(selectedObject.transform.parent.gameObject);
         }
         else
         {
-            Debug.Log("Raycast did not hit any objects.");
+            int chessPieceLayerMask = LayerMask.GetMask("Pieces");
+            RaycastHit2D hitChessPiece = Physics2D.Raycast(mousePosition, Vector2.zero, Mathf.Infinity, chessPieceLayerMask);
+        
+            if (hitChessPiece.collider != null)
+            {
+                GameObject selectedObject = hitChessPiece.collider.gameObject;
+                Debug.Log("ChessPiece Hit: " + selectedObject.name);
+                Piece piece = selectedObject.GetComponent<Piece>();
+                if (piece.IsWhite() == isWhiteTurn)
+                {
+                    Debug.Log("ChessPiece Selected: " + selectedObject.name);
+                    SelectPiece(selectedObject);
+                }
+            }
+            else
+            {
+                Debug.Log("Raycast did not hit any objects.");
+            }
         }
     }
     void RightClick()
     {
         int layerMask = LayerMask.GetMask("Tiles");
-        RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero, Mathf.Infinity, layerMask);
+        UnityEngine.Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mousePosition.z = 0;
+
+        RaycastHit2D hit = Physics2D.Raycast(mousePosition, UnityEngine.Vector2.zero, Mathf.Infinity, layerMask);
         if (hit.collider != null)
         {
             GameObject clickedTile = hit.collider.gameObject;
@@ -120,48 +129,40 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void DragPiece()
-    {
-        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mousePosition.z = chessPiece.transform.position.z;
-        chessPiece.transform.position = mousePosition;
-    }
-
-    void DropPiece()
-    {
-        isDragging = false;
-        RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
-        Debug.Log(hit.collider.gameObject.name);
-        if (hit.collider != null && hit.collider.gameObject.CompareTag("MovePlate"))
-        {
-            Debug.Log("droppyyyy");
-            MovePiece(hit.collider.gameObject.transform.parent.gameObject);
-        }
-        else
-        {
-            // Return to initial position if not dropped on a valid tile
-            chessPiece.transform.position = initialPosition;
-        }
-        DeselectCurrentPiece();
-    }
-
     void MovePiece(GameObject targetTile)
     {
         Vector3 position = targetTile.transform.position;
         position.z = chessPiece.transform.position.z; // Ensure the z position is maintained
-        chessPiece.transform.position = position;
 
-        RaycastHit2D hit =  Physics2D.Raycast(position, Vector2.zero);
+        CapturePiece(position);
+        
+        chessPiece.transform.position = position;
+        Debug.Log("Moved piece to: " + position);
+        DeselectCurrentPiece();
+        EndTurn();
+    }
+
+    void CapturePiece(Vector3 position)
+    {
+        Vector3 raycastPosition = position;
+        raycastPosition.z = -0.2f; //raycast checks the correct Z position for pieces
+        RaycastHit2D hit =  Physics2D.Raycast(raycastPosition, Vector2.zero);
+        Debug.Log("Raycast mouse position is: " + raycastPosition);
         if (hit.collider != null && hit.collider.gameObject.CompareTag("ChessPiece"))
         {
             GameObject hitPiece = hit.collider.gameObject;
+            Debug.Log("Capturing Piece: " + hitPiece.name);
             if (hitPiece.GetComponent<Piece>().IsWhite() != chessPiece.GetComponent<Piece>().IsWhite()) 
             {
-                Destroy(hitPiece);
+                Destroy(hitPiece); //capture piece
             }
         }
-        
-        Debug.Log("Moved piece to: " + position);
-        DeselectCurrentPiece();
     }
+
+        void EndTurn()
+    {
+        isWhiteTurn = !isWhiteTurn; //switch turns
+        Debug.Log("Turn ended. It is now " + (isWhiteTurn ? "White" : "Black") + "'s turn");
+    }
+
 }

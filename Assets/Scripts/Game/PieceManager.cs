@@ -66,12 +66,6 @@ public class PieceManager : MonoBehaviour
         piece.GetComponent<SpriteRenderer>().sortingOrder = 2;
     }
 
-    bool IsWhite(GameObject chessPiece) 
-    {
-        if (chessPiece.name.Contains("White")) return true;
-        else return false;
-    }
-
     public void ShowMovePlates(GameObject chessPiece)
     {
         ClearMovePlates();

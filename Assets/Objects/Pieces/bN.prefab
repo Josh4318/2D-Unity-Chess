@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4047434077924860335}
   - component: {fileID: 11042430087452064}
   - component: {fileID: -2503239636405298255}
-  m_Layer: 8
+  m_Layer: 9
   m_Name: bN
   m_TagString: ChessPiece
   m_Icon: {fileID: 0}
@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 1167068224156168878}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.603, y: -4.242, z: -0.1}
+  m_LocalPosition: {x: 0.603, y: -4.242, z: 0}
   m_LocalScale: {x: 0.6, y: 0.6, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
