@@ -290,7 +290,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8665333375839395284}
   - component: {fileID: 3659933679511799806}
-  m_Layer: 7
+  m_Layer: 8
   m_Name: rightClickHighlight
   m_TagString: Tile
   m_Icon: {fileID: 0}
